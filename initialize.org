@@ -1,0 +1,684 @@
+* Package manager
+** Repositories
+#+BEGIN_SRC emacs-lisp
+  (setq package-archives
+        '(("org" .
+           "http://orgmode.org/elpa/")
+          ("marmalade" .
+           "http://marmalade-repo.org/packages/")
+          ("gnu" .
+           "http://elpa.gnu.org/packages/")
+          ("melpa" .
+           "http://melpa.milkbox.net/packages/")
+          ("sunrise commander" .
+           "http://joseito.republika.pl/sunrise-commander/")))
+#+END_SRC
+* Backup files
+Store backup files in [[~/.emacs-backups]]
+#+BEGIN_SRC emacs-lisp
+  (setq
+   backup-by-copying t
+   backup-directory-alist '(("." . "~/.emacs-backups")))
+#+END_SRC
+* Line numbering
+Enable line numbering in most major modes, excluding those in
+~linum-disabled-modes-list~ and starred buffers. Also format line numbers based
+on file length.
+#+BEGIN_SRC emacs-lisp
+  (defcustom linum-disabled-modes-list
+    '(eshell-mode
+      speedbar-mode
+      compilation-mode
+      org-mode
+      text-mode
+      dired-mode)
+    "* List of modes disabled when global linum mode is on"
+    :type '(repeat (sexp :tag "Major mode"))
+    :tag " Major modes where linum is disabled: "
+    :group 'linum)
+  
+  (defcustom linum-disable-starred-buffers nil
+    "* Disable buffers that have stars in them like *Gnu Emacs*"
+    :type 'boolean
+    :group 'linum)
+  
+  (add-hook 'linum-before-numbering-hook
+          (lambda ()
+            (setq-local linum-format-fmt
+                (let ((w (length (number-to-string
+                          (count-lines (point-min) (point-max))))))
+                  (concat " %" (number-to-string w) "d ")))))
+  
+  (defun linum-format-func (line)
+    (concat
+     (propertize (format linum-format-fmt line) 'face 'linum)))
+  
+  (setq linum-format 'linum-format-func)
+  
+  (add-hook 'after-change-major-mode-hook
+      '(lambda ()
+         (if
+             (or
+                  (minibufferp)
+                  (member major-mode linum-disabled-modes-list)
+                  (and
+                      linum-disable-starred-buffers
+                      (string-match "*" (buffer-name))
+                  )
+              )
+             (progn
+               (linum-mode -1)
+               (setq left-margin-width 1))
+             (linum-mode t)
+           )
+      )
+  )
+#+END_SRC
+* Highlight the current line
+Only highlight the current line when idle
+#+BEGIN_SRC emacs-lisp
+  (toggle-hl-line-when-idle t)
+#+END_SRC
+Make hl-line work when visual-line-mode is enabled
+#+BEGIN_SRC emacs-lisp
+  (defun visual-line-line-range ()
+    (save-excursion (cons (progn
+                            (vertical-motion 0)
+                            (point))
+                          (progn
+                            (vertical-motion 1)
+                            (point)))))
+
+  (setq hl-line-range-function 'visual-line-line-range)
+#+END_SRC
+* Global keybindings
+Make TAB insert a literal tab in fundamental mode
+#+BEGIN_SRC emacs-lisp
+  (global-set-key (kbd "TAB") 'self-insert-command)
+#+END_SRC
+* Display formatting
+** Set the tabstop to 4 spaces
+#+BEGIN_SRC emacs-lisp
+  (setq default-tab-width 4)
+#+END_SRC
+** Set the default line-width to 80 characters
+#+BEGIN_SRC emacs-lisp
+  (setq-default fill-column 80)
+#+END_SRC
+* Hide the welcome screen
+#+BEGIN_SRC emacs-lisp
+  (setq inhibit-startup-message t)
+#+END_SRC
+* Overwrite the selection
+When typing or yanking with text marked, replace the marked text instead of
+inserting after the mark.
+#+BEGIN_SRC emacs-lisp
+  (delete-selection-mode t)
+#+END_SRC
+* Remap RET to auto-indent
+Make the RET key go to a new line and auto-indent.
+#+BEGIN_SRC emacs-lisp
+  (global-set-key (kbd "RET") 'newline-and-indent)
+#+END_SRC
+* Set xbm location
+#+BEGIN_SRC emacs-lisp
+  (add-to-list 'x-bitmap-file-path user-emacs-directory)
+#+END_SRC
+* Load things set with =M-x customize=
+#+BEGIN_SRC emacs-lisp
+  (setq custom-file "~/.emacs.d/custom.el")
+  (load custom-file)
+#+END_SRC
+* Toggle frame transparency with =C-c t=
+#+BEGIN_SRC emacs-lisp
+  (set-frame-parameter (selected-frame) 'alpha '(100 100))
+  (add-to-list 'default-frame-alist '(alpha 100 100))
+  
+  (defun wk/toggle-transparency ()
+    (interactive)
+    (if (/=
+         (cadr (frame-parameter nil 'alpha))
+         100)
+        (set-frame-parameter nil 'alpha '(100 100))
+        (set-frame-parameter nil 'alpha '(85 50))))
+  
+  (global-set-key (kbd "C-c t") 'wk/toggle-transparency)
+#+END_SRC
+* Org Mode configuration
+** Keybindings
+*** Global
+#+BEGIN_SRC emacs-lisp
+  (global-set-key "\C-cl" 'org-store-link)
+  (global-set-key "\C-cc" 'org-capture)
+  (global-set-key "\C-ca" 'org-agenda)
+  (global-set-key "\C-cb" 'org-iswitchb)
+#+END_SRC
+** General options
+Use indented display
+#+BEGIN_SRC emacs-lisp
+  (setq org-startup-indented t)
+#+END_SRC
+
+Allow mouse interaction
+#+BEGIN_SRC emacs-lisp
+  (require 'org-mouse)
+#+END_SRC
+** Todo options
+#+BEGIN_SRC emacs-lisp
+  (setq org-todo-keywords
+        '((sequence "TODO" "|" "DONE" "MOOT")))
+#+END_SRC
+** Babel
+Highlight source in buffer
+#+BEGIN_SRC emacs-lisp
+  (setq org-src-fontify-natively t)
+#+END_SRC
+** Agenda
+#+BEGIN_SRC emacs-lisp
+  (add-to-list 'org-agenda-files "~/documents/schedule/")
+#+END_SRC
+** Latex export
+#+BEGIN_SRC emacs-lisp
+  ;(require 'org-latex)
+  (setq org-export-latex-listings t)
+
+  ;; Originally taken from Bruno Tavernier: http://thread.gmane.org/gmane.emacs.orgmode/31150/focus=31432
+  ;; but adapted to use latexmk 4.20 or higher.
+  (defun my-auto-tex-cmd ()
+    "When exporting from .org with latex, automatically run latex,
+       pdflatex, or xelatex as appropriate, using latexmk."
+    (let ((texcmd)))
+    ;; default command: oldstyle latex via dvi
+    (setq texcmd "latexmk -dvi -pdfps -quiet %f")
+    ;; pdflatex -> .pdf
+    (if (string-match "LATEX_CMD: pdflatex" (buffer-string))
+        (setq texcmd "latexmk -pdf -quiet %f"))
+    ;; xelatex -> .pdf
+    (if (string-match "LATEX_CMD: xelatex" (buffer-string))
+        (setq texcmd "latexmk -pdflatex=xelatex -pdf -quiet %f"))
+    ;; LaTeX compilation command
+    (setq org-latex-to-pdf-process (list texcmd)))
+
+  (add-hook 'org-export-latex-after-initial-vars-hook 'my-auto-tex-cmd)
+
+
+  ;; Specify default packages to be included in every tex file, whether pdflatex or xelatex
+  (setq org-export-latex-packages-alist
+        '(("" "graphicx" t)
+              ("" "longtable" nil)
+              ("" "float" nil)))
+
+  (defun my-auto-tex-parameters ()
+        "Automatically select the tex packages to include."
+        ;; default packages for ordinary latex or pdflatex export
+        (setq org-export-latex-default-packages-alist
+              '(("AUTO" "inputenc" t)
+                ("T1"   "fontenc"   t)
+                (""     "fixltx2e"  nil)
+                (""     "wrapfig"   nil)
+                (""     "soul"      t)
+                (""     "textcomp"  t)
+                (""     "marvosym"  t)
+                (""     "wasysym"   t)
+                (""     "latexsym"  t)
+                (""     "amssymb"   t)
+                (""     "hyperref"  nil)))
+
+        ;; Packages to include when xelatex is used
+        (if (string-match "LATEX_CMD: xelatex" (buffer-string))
+            (setq org-export-latex-default-packages-alist
+                  '(("" "fontspec" t)
+                    ("" "xunicode" t)
+                    ("" "url" t)
+                    ("" "rotating" t)
+                    ("american" "babel" t)
+                    ("babel" "csquotes" t)
+                    ("" "soul" t)
+                    ("xetex" "hyperref" nil)
+                    )))
+
+        (if (string-match "LATEX_CMD: xelatex" (buffer-string))
+            (setq org-export-latex-classes
+                  (cons '("article"
+                          "\\documentclass[11pt,article,oneside]{memoir}"
+                          ("\\section{%s}" . "\\section*{%s}")
+                          ("\\subsection{%s}" . "\\subsection*{%s}")
+                          ("\\subsubsection{%s}" . "\\subsubsection*{%s}")
+                          ("\\paragraph{%s}" . "\\paragraph*{%s}")
+                          ("\\subparagraph{%s}" . "\\subparagraph*{%s}"))
+                        org-export-latex-classes))))
+
+  (add-hook 'org-export-latex-after-initial-vars-hook 'my-auto-tex-parameters)
+#+END_SRC
+* Use ido autocomplete
+#+BEGIN_SRC emacs-lisp
+  (ido-mode t)
+#+END_SRC
+* AucTeX
+Enable parsing and saving parsing information
+#+BEGIN_SRC emacs-lisp
+  (setq TeX-parse-self t)
+  (setq TeX-auto-save t)
+#+END_SRC
+
+Rebind enter to auto-indent
+#+BEGIN_SRC emacs-lisp
+  (add-hook 'tex-mode-hook (lambda () (local-set-key (kbd "enter") 'reindent-then-newline-and-indent) ))
+#+END_SRC
+* Smart Tabs
+Use smart tabs (tab for indent, space for alignment) in all supported modes
+#+BEGIN_SRC emacs-lisp
+  (smart-tabs-insinuate 'c
+                        'c++
+                        'java
+                        'javascript
+                        'cperl
+                        'ruby
+                        'nxml)
+#+END_SRC
+* Quick init file access
+Use =M-x edit-init-file= to edit this file
+#+BEGIN_SRC emacs-lisp
+  (defun edit-init-file ()
+    "Edit init.org in another window."
+    (interactive)
+    (find-file-other-window
+     (concat user-emacs-directory "initialize.org")))
+#+END_SRC
+#+BEGIN_SRC emacs-lisp
+  (defun edit-theme-file ()
+      "Edit wk-theme.el in another window."
+      (interactive)
+      (find-file-other-window
+       (concat user-emacs-directory "wk-theme.el")))
+#+END_SRC
+* Tab bar
+Keep a tab bar at the top of each window
+#+BEGIN_SRC emacs-lisp
+  ;; (tabbar-mode t)
+#+END_SRC
+** Tab groups
+#+BEGIN_SRC emacs-lisp
+  ;; (defun make-tabbar-groups ()
+  ;;   (cond
+  ;;    ((or (eq major-mode 'shell-mode)
+  ;;         (eq major-mode 'compilation-mode))
+  ;;     (list "Programming" "Special"))
+  ;;    ((eq major-mode 'speedbar-mode)
+  ;;     nil)
+  ;;    ((string-equal "*" (substring (buffer-name) 0 1))
+  ;;     (list "Special"))
+  ;;    ((derived-mode-p 'prog-mode)
+  ;;     (list "Programming"))
+  ;;    ((eq major-mode 'dired-mode)
+  ;;     (list "Dired"))
+  ;;    ((eq major-mode 'text-mode)
+  ;;     (list "Text"))
+  ;;    ((derived-mode-p 'tex-mode)
+  ;;     (list "TeX"))
+  ;;    (t
+  ;;     (list "Other"))))
+
+  ;; (setq tabbar-buffer-groups-function 'make-tabbar-groups)
+#+END_SRC
+** Show modification indicator in tab bar
+#+BEGIN_SRC emacs-lisp
+  ;; (defadvice tabbar-buffer-tab-label (after fixup_tab_label_space_and_flag activate)
+  ;;    (setq ad-return-value
+  ;;          (if (and (buffer-modified-p (tabbar-tab-value tab))
+  ;;                   (buffer-file-name (tabbar-tab-value tab)))
+  ;;              (concat " " (concat ad-return-value " [*] "))
+  ;;            (concat " " (concat ad-return-value " ")))))
+  ;; (defun modification-state-change ()
+  ;;    (tabbar-set-template tabbar-current-tabset nil)
+  ;;    (tabbar-display-update))
+  ;; (defun on-buffer-modification ()
+  ;;    (set-buffer-modified-p t)
+  ;;    (modification-state-change))
+  ;; (add-hook 'after-save-hook 'modification-state-change)
+  ;; (add-hook 'first-change-hook 'on-buffer-modification)
+#+END_SRC
+* Frame title
+Put current file and modified status in the frame title
+#+BEGIN_SRC emacs-lisp
+  (setq frame-title-format "%b [%+]")
+#+END_SRC
+* Speedbar
+Use SrSpeedbar to keep the speedbar as a left window in the main emacs frame
+** Enable
+Enable and open sr-speedbar
+#+BEGIN_SRC emacs-lisp
+  (require 'sr-speedbar)
+  (sr-speedbar-open)
+#+END_SRC
+** Options
+Disable images for speedbar
+#+BEGIN_SRC emacs-lisp
+  (setq speedbar-use-images nil)
+#+END_SRC
+* Disable GUI widgets
+#+BEGIN_SRC emacs-lisp
+  (scroll-bar-mode -1)
+  (tool-bar-mode -1)
+#+END_SRC
+* Cursor
+Use a bar as a cursor instead of a box
+#+BEGIN_SRC emacs-lisp
+  (setq-default cursor-type 'bar)
+#+END_SRC
+* Highlight 80 character mark
+Mark the 80th column with a red box in programming modes
+#+BEGIN_SRC emacs-lisp
+  (add-hook 'prog-mode-hook '(lambda () (column-marker-1 fill-column)))
+#+END_SRC
+* Smartparens
+Set up smartparens and configure it to work like paredit.
+Stolen from [[https://github.com/purcell/paredit-everywhere]]
+#+BEGIN_SRC emacs-lisp
+  (require 'smartparens-config) ; Setup standard configuration
+  
+  (add-hook 'smartparens-mode-hook
+            '(lambda ()
+               (setq sp-autoskip-closing-pair 'always
+                     ;; Don't kill the entire symbol on C-k
+                     sp-hybrid-kill-entire-symbol nil))
+  
+    ;; Smartparens bindings
+    (let ((map smartparens-mode-map))
+      ;; Movement and navigation
+      (define-key map (kbd "C-M-f") #'sp-forward-sexp)
+      (define-key map (kbd "C-M-b") #'sp-backward-sexp)
+      (define-key map (kbd "C-M-u") #'sp-backward-up-sexp)
+      (define-key map (kbd "C-M-d") #'sp-down-sexp)
+      (define-key map (kbd "C-M-p") #'sp-backward-down-sexp)
+      (define-key map (kbd "C-M-n") #'sp-up-sexp)
+      ;; Deleting and killing
+      (define-key map (kbd "C-M-k") #'sp-kill-sexp)
+      (define-key map (kbd "C-M-w") #'sp-copy-sexp)
+      ;; Depth changing
+      (define-key map (kbd "M-s") #'sp-splice-sexp)
+      (define-key map (kbd "M-<up>") #'sp-splice-sexp-killing-backward)
+      (define-key map (kbd "M-<down>") #'sp-splice-sexp-killing-forward)
+      (define-key map (kbd "M-r") #'sp-splice-sexp-killing-around)
+      (define-key map (kbd "M-?") #'sp-convolute-sexp)
+      ;; Barfage & Slurpage
+      (define-key map (kbd "C-)") #'sp-forward-slurp-sexp)
+      (define-key map (kbd "C-<right>") #'sp-forward-slurp-sexp)
+      (define-key map (kbd "C-}") #'sp-forward-barf-sexp)
+      (define-key map (kbd "C-<left>") #'sp-forward-barf-sexp)
+      (define-key map (kbd "C-(") #'sp-backward-slurp-sexp)
+      (define-key map (kbd "C-M-<left>") #'sp-backward-slurp-sexp)
+      (define-key map (kbd "C-{") #'sp-backward-barf-sexp)
+      (define-key map (kbd "C-M-<right>") #'sp-backward-barf-sexp)
+      ;; Miscellaneous commands
+      (define-key map (kbd "M-S") #'sp-split-sexp)
+      (define-key map (kbd "M-J") #'sp-join-sexp)
+      (define-key map (kbd "C-M-t") #'sp-transpose-sexp))
+  
+    ;; Some additional bindings for strict mode
+    (let ((map smartparens-strict-mode-map))
+      (define-key map (kbd "M-q") #'sp-indent-defun)
+      (define-key map (kbd "C-j") #'sp-newline)))
+  
+  (smartparens-global-mode)
+  (show-smartparens-global-mode)
+  
+  (set-face-attribute 'highlight nil :foreground 'unspecified)
+#+END_SRC
+* Shell
+Make shell prompt read-only
+#+BEGIN_SRC emacs-lisp
+  (setq-default comint-prompt-read-only t)
+#+END_SRC
+* Fonts
+#+BEGIN_SRC emacs-lisp
+  ;(set-fontset-font "fontset-default"
+  ;                  'unicode
+  ;                  '("Source Code Pro" . "iso10646-1"))
+  
+  ;(add-to-list 'default-frame-alist '(font . "Source Code Pro ExtraLight" ))
+  
+  ;(set-fontset-font (frame-parameter nil 'font)
+  ;  'japanese-jisx0208
+  ;  '("VL Gothic" . "unicode-bmp"))
+#+END_SRC
+* Gnus
+** Authentication
+#+BEGIN_SRC emacs-lisp
+  (setq gnus-select-method
+        '(nnimap "gmail"
+                 (nnimap-address "imap.gmail.com")
+                 (nnimap-server-port 993)
+                 (nnimap-stream ssl)))
+  
+  (setq message-send-mail-function 'smtpmail-send-it
+        smtpmail-starttls-credentials '(("smtp.gmail.com" 587 nil nil))
+        smtpmail-auth-credentials '(("smtp.gmail.com" 587
+                                 "kunkel.w.e@gmail.com" nil))
+        smtpmail-default-smtp-server "smtp.gmail.com"
+        smtpmail-smtp-server "smtp.gmail.com"
+        smtpmail-smtp-service 587)
+#+END_SRC
+** Fixing ignored [GMAIL] labels
+#+BEGIN_SRC emacs-lisp
+  (setq gnus-ignored-newsgroups "^to\\.\\|^[0-9. ]+\\( \\|$\\)\\|^[\"]\"[#'()]")
+#+END_SRC
+** Summary buffer format
+*** Format
+#+BEGIN_SRC emacs-lisp
+  (setq gnus-summary-line-format "%U%R %1{%B%1}%2{%(%[ %*%0,20f %]%)%2} %3{%s%3}\n")
+  (setq gnus-sum-thread-tree-root ""
+        gnus-sum-thread-tree-false-root ""
+        gnus-sum-thread-tree-single-indent ""
+        gnus-sum-thread-tree-vertical "│ "
+        gnus-sum-thread-tree-leaf-with-other "├─→ "
+        gnus-sum-thread-tree-single-leaf "└─→ ")
+#+END_SRC
+*** Fonts
+#+BEGIN_SRC emacs-lisp
+  (defface wk/thread-tree-face
+    '((t :foreground "gray45"))
+    "Face for box-drawing character thread tree display in the summary")
+  
+  (defface wk/from-name-face
+    '((t :foreground "khaki"))
+    "Face for the name of the sender in the summary")
+  
+  (defface wk/subject-face
+    '((t :foreground "powder blue"))
+    "face for the subject in the summary")
+  
+  (setq gnus-face-1 'wk/thread-tree-face
+        gnus-face-2 'wk/from-name-face
+        gnus-face-3 'wk/subject-face)
+#+END_SRC
+** View read messages
+#+BEGIN_SRC emacs-lisp
+  (setq gnus-fetch-old-headers 'some)
+#+END_SRC
+** View html messages in browser
+#+BEGIN_SRC emacs-lisp
+  (defun wk/view-in-browser (handle)
+    "Save and view in browser"
+    (interactive)
+    (let ((filename
+           (concat temporary-file-directory "view-gnus-message.html")))
+      (with-current-buffer gnus-article-buffer
+        (mm-save-part-to-file handle filename)
+        (browse-url filename))))
+  
+  (setq mm-text-html-renderer 'wk/view-in-browser)
+#+END_SRC
+** Sender information
+#+BEGIN_SRC emacs-lisp
+  (setq gnus-posting-styles
+        '((".*"
+           (name "William Kunkel")
+           (address "will@wkunkel.com"))))
+#+END_SRC
+* Trailing whitespace
+#+BEGIN_SRC emacs-lisp
+  (setq-default show-trailing-whitespace t)
+#+END_SRC
+* Dired
+#+BEGIN_SRC emacs-lisp
+  (toggle-diredp-find-file-reuse-dir 1)
+  (setq dired-omit-files
+        (concat "^\\..*$"))
+  (add-hook 'dired-mode-hook '(lambda () (setq dired-omit-mode t)))
+#+END_SRC
+* Undo/redo
+#+BEGIN_SRC emacs-lisp
+  (global-undo-tree-mode 1)
+  (global-set-key (kbd "C-z") 'undo)
+  (global-set-key (kbd "C-S-z") 'undo-tree-redo)
+#+END_SRC
+* Line wrapping
+#+BEGIN_SRC emacs-lisp
+  (add-hook 'org-mode-hook (lambda () (visual-line-mode t)))
+#+END_SRC
+* Spellcheck
+#+BEGIN_SRC emacs-lisp
+  (add-hook 'org-mode-hook (lambda () (flyspell-mode t)))
+#+END_SRC
+* Typographical punctuation
+#+BEGIN_SRC emacs-lisp
+  (require 'typopunct)
+  (typopunct-change-language 'english t)
+#+END_SRC
+* Synctex and Evince
+#+BEGIN_SRC emacs-lisp
+  ; SyncTeX basics
+
+  ; un-urlify and urlify-escape-only should be improved to handle all special characters, not only spaces.
+  ; The fix for spaces is based on the first comment on http://emacswiki.org/emacs/AUCTeX#toc20
+
+  (defun un-urlify (fname-or-url)
+    "Transform file:///absolute/path from Gnome into /absolute/path with very limited support for special characters"
+    (if (string= (substring fname-or-url 0 8) "file:///")
+        (url-unhex-string (substring fname-or-url 7))
+      fname-or-url))
+
+  (defun urlify-escape-only (path)
+    "Handle special characters for urlify"
+    (replace-regexp-in-string " " "%20" path))
+
+  (defun urlify (absolute-path)
+    "Transform /absolute/path to file:///absolute/path for Gnome with very limited support for special characters"
+    (if (string= (substring absolute-path 0 1) "/")
+        (concat "file://" (urlify-escape-only absolute-path))
+        absolute-path))
+
+
+  ; SyncTeX backward search - based on http://emacswiki.org/emacs/AUCTeX#toc20, reproduced on http://tex.stackexchange.com/a/49840/21017
+
+  (defun th-evince-sync (file linecol &rest ignored)
+    (let* ((fname (un-urlify file))
+           (buf (find-file fname))
+           (line (car linecol))
+           (col (cadr linecol)))
+      (if (null buf)
+          (message "[Synctex]: Could not open %s" fname)
+        (switch-to-buffer buf)
+        (goto-line (car linecol))
+        (unless (= col -1)
+          (move-to-column col)))))
+
+  (defvar *dbus-evince-signal* nil)
+
+  (defun enable-evince-sync ()
+    (require 'dbus)
+    ; cl is required for setf, taken from: http://lists.gnu.org/archive/html/emacs-orgmode/2009-11/msg01049.html
+    (require 'cl)
+    (when (and
+           (eq window-system 'x)
+           (fboundp 'dbus-register-signal))
+      (unless *dbus-evince-signal*
+        (setf *dbus-evince-signal*
+              (dbus-register-signal
+               :session nil "/org/gnome/evince/Window/0"
+               "org.gnome.evince.Window" "SyncSource"
+               'th-evince-sync)))))
+
+  (add-hook 'LaTeX-mode-hook 'enable-evince-sync)
+
+
+  ; SyncTeX forward search - based on http://tex.stackexchange.com/a/46157
+
+  ;; universal time, need by evince
+  (defun utime ()
+    (let ((high (nth 0 (current-time)))
+          (low (nth 1 (current-time))))
+     (+ (* high (lsh 1 16) ) low)))
+
+  ;; Forward search.
+  ;; Adapted from http://dud.inf.tu-dresden.de/~ben/evince_synctex.tar.gz
+  (defun auctex-evince-forward-sync (pdffile texfile line)
+    (let ((dbus-name
+       (dbus-call-method :session
+                 "org.gnome.evince.Daemon"  ; service
+                 "/org/gnome/evince/Daemon" ; path
+                 "org.gnome.evince.Daemon"  ; interface
+                 "FindDocument"
+                 (urlify pdffile)
+                 t     ; Open a new window if the file is not opened.
+                 )))
+      (dbus-call-method :session
+            dbus-name
+            "/org/gnome/evince/Window/0"
+            "org.gnome.evince.Window"
+            "SyncView"
+            (urlify-escape-only texfile)
+            (list :struct :int32 line :int32 1)
+    (utime))))
+
+  (defun auctex-evince-view ()
+    (let ((pdf (file-truename (concat default-directory
+                      (TeX-master-file (TeX-output-extension)))))
+      (tex (buffer-file-name))
+      (line (line-number-at-pos)))
+      (auctex-evince-forward-sync pdf tex line)))
+
+  ;; New view entry: Evince via D-bus.
+  (setq TeX-view-program-list '())
+  (add-to-list 'TeX-view-program-list
+           '("EvinceDbus" auctex-evince-view))
+
+  ;; Prepend Evince via D-bus to program selection list
+  ;; overriding other settings for PDF viewing.
+  (setq TeX-view-program-selection '())
+  (add-to-list 'TeX-view-program-selection
+           '(output-pdf "EvinceDbus"))
+#+END_SRC
+#+BEGIN_SRC emacs-lisp
+  (defun raise-client-frame ()
+    (let ((wmctrl (executable-find "wmctrl")))
+      (if wmctrl
+      (start-process "wmctrl" nil wmctrl "-R" (frame-parameter nil 'name)))))
+  ;; This raises the frame when using Evince.
+  (add-hook 'TeX-source-correlate-mode-hook
+        (lambda ()
+          (when (TeX-evince-dbus-p)
+            (dbus-register-signal
+             :session nil "/org/gnome/evince/Window/0"
+             "org.gnome.evince.Window" "SyncSource"
+             (lambda (file linecol &rest ignored)
+           (TeX-source-correlate-sync-source file linecol ignored)
+           (raise-client-frame))))))
+  ;; This raises the frame when using all other viewers.
+  (add-hook 'server-switch-hook 'raise-client-frame)
+#+END_SRC
+
+* Haskell mode
+#+BEGIN_SRC emacs-lisp
+  (add-hook 'haskell-mode-hook 'structured-haskell-mode)
+#+END_SRC
+* HTML5 in nXML mode
+#+BEGIN_SRC emacs-lisp
+  (add-to-list 'load-path "~/.emacs.d/html5-el/")
+
+  (eval-after-load "rng-loc"
+    '(add-to-list 'rng-schema-locating-files "~/.emacs.d/html5-el/schemas.xml"))
+
+  (require 'whattf-dt)
+#+END_SRC
