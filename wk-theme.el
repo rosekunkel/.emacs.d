@@ -37,6 +37,9 @@
 					:stipple nil
 					:inherit nil))))
 
+	 (set-fontset-font "fontset-default" nil
+					   (font-spec :size 16 :name "DejaVu Sans Mono"))
+
 	 `(variable-pitch ((t (:family "Noto Sans UI"))))
 	 `(link ((t (:foreground ,wk/magenta))))
 	 `(link-visited ((t (:foreground ,wk/violet))))
