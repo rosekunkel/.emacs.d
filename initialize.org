@@ -35,7 +35,7 @@ Load my custom theme.
 Load packages if they are not already installed.
 #+BEGIN_SRC emacs-lisp
   (package-refresh-contents)
-  (packages-install
+  (setq package-list
    '(async
      auctex
      auto-complete
@@ -81,6 +81,10 @@ Load packages if they are not already installed.
      unicode-fonts
      vlf
      yaml-mode))
+
+  (dolist (package package-list)
+    (unless (package-installed-p package)
+      (package-install package)))
 #+END_SRC
 * Backup files
 Store backup files in [[~/.emacs-backups]]
@@ -265,10 +269,10 @@ Use SrSpeedbar to keep the speedbar as a left window in the main emacs frame.
 Enable and open sr-speedbar.
 #+BEGIN_SRC emacs-lisp
   (require 'sr-speedbar)
-  (sr-speedbar-open)
   (setq speedbar-show-unknown-files t
         sr-speedbar-right-side nil
         sr-speedbar-skip-other-window-p t)
+  (sr-speedbar-open)
 #+END_SRC
 
 Disable images for speedbar.
@@ -412,6 +416,7 @@ Validate HTML5 in nXML mode when the appropriate xmlns is provided.
 * Helm
 Enable helm and set useful keybindings.
 #+BEGIN_SRC emacs-lisp
+  (require 'helm)
   (require 'helm-config)
   (helm-autoresize-mode t)
 
