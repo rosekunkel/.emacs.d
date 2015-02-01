@@ -44,7 +44,6 @@ Load packages if they are not already installed.
      dash
      diff-hl
      dired+
-     fill-column-indicator
      font-utils
      fringe-helper
      git-commit-mode
