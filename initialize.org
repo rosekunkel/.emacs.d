@@ -429,3 +429,8 @@ Enable YASnippet everywhere.
 #+BEGIN_SRC emacs-lisp
   (yas-global-mode 1)
 #+END_SRC
+* GDB
+Use the multi-window layout for GDB.
+#+BEGIN_SRC emacs-lisp
+  (setq gdb-many-windows t)
+#+END_SRC
