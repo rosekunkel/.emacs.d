@@ -79,7 +79,8 @@ Load packages if they are not already installed.
      undo-tree
      unicode-fonts
      vlf
-     yaml-mode))
+     yaml-mode
+     yasnippet))
 
   (dolist (package package-list)
     (unless (package-installed-p package)
@@ -423,4 +424,9 @@ Enable helm and set useful keybindings.
   (global-set-key (kbd "M-y") 'helm-show-kill-ring)
   (global-set-key (kbd "C-x b") 'helm-mini)
   (global-set-key (kbd "C-x C-f") 'helm-find-files)
+#+END_SRC
+* YASnippet
+Enable YASnippet everywhere.
+#+BEGIN_SRC emacs-lisp
+  (yas-global-mode 1)
 #+END_SRC
