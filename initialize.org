@@ -266,13 +266,12 @@ Put current file and modified status in the frame title.
 * Speedbar
 Use SrSpeedbar to keep the speedbar as a left window in the main emacs frame.
 
-Enable and open sr-speedbar.
+Enable and sr-speedbar.
 #+BEGIN_SRC emacs-lisp
   (require 'sr-speedbar)
   (setq speedbar-show-unknown-files t
         sr-speedbar-right-side nil
         sr-speedbar-skip-other-window-p t)
-  (sr-speedbar-open)
 #+END_SRC
 
 Disable images for speedbar.
