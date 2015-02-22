@@ -445,3 +445,8 @@ Set indentation to 4 spaces.
   (setq c-basic-offset 4)
   (add-hook 'c-mode-hook (lambda () (setq indent-tabs-mode nil)))
 #+END_SRC
+* Machine-specific configuration
+Load local.el to enable machine-specific settings that don't get saved in git.
+#+BEGIN_SRC emacs-lisp
+  (load "local.el" t)
+#+END_SRC
