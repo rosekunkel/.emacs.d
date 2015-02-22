@@ -439,3 +439,9 @@ Use the multi-window layout for GDB.
 #+BEGIN_SRC emacs-lisp
   (setq gdb-many-windows t)
 #+END_SRC
+* C mode
+Set indentation to 4 spaces.
+#+BEGIN_SRC emacs-lisp
+  (setq c-basic-offset 4)
+  (add-hook 'c-mode-hook (lambda () (setq indent-tabs-mode nil)))
+#+END_SRC
