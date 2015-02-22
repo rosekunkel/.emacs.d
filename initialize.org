@@ -448,5 +448,5 @@ Set indentation to 4 spaces.
 * Machine-specific configuration
 Load local.el to enable machine-specific settings that don't get saved in git.
 #+BEGIN_SRC emacs-lisp
-  (load "~/.emacs.d/local")
+  (load "~/.emacs.d/local" t)
 #+END_SRC
