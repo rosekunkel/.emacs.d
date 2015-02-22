@@ -34,7 +34,6 @@ Load my custom theme.
 ** Packages
 Load packages if they are not already installed.
 #+BEGIN_SRC emacs-lisp
-  (package-refresh-contents)
   (setq package-list
    '(async
      auctex
@@ -82,9 +81,15 @@ Load packages if they are not already installed.
      yaml-mode
      yasnippet))
 
-  (dolist (package package-list)
-    (unless (package-installed-p package)
-      (package-install package)))
+  (let (packages-not-refreshed)
+      (dolist (package package-list)
+        (unless (package-installed-p package)
+          (progn
+            (if (packages-not-refreshed)
+                (progn
+                  (setq packages-not-refreshed t)
+                  (package-refresh-contents)))
+            (package-install package)))))
 #+END_SRC
 * Backup files
 Store backup files in [[~/.emacs-backups]]
