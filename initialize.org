@@ -241,9 +241,10 @@ Enable parsing and saving parsing information.
   (setq TeX-auto-save t)
 #+END_SRC
 
-Rebind RET to indent automatically.
+Set RET to indent automatically, and fix weird wrapping of math.
 #+BEGIN_SRC emacs-lisp
-  (add-hook 'tex-mode-hook (lambda () (local-set-key (kbd "RET") 'reindent-then-newline-and-indent)))
+  (setq LaTeX-fill-break-at-separators '(\\\[ \\\]))
+  (setq TeX-newline-function 'newline-and-indent)
 #+END_SRC
 * Quick config file access
 Use =M-x edit-init-file= to edit this file.
