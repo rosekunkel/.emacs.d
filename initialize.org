@@ -449,7 +449,7 @@ Set indentation to 4 spaces.
 * Assembly
 Add Y86 to the list of known files.
 #+BEGIN_SRC emacs-lisp
-  (add-to-list auto-mode-alist '("\\.ys" . asm-mode))
+  (add-to-list 'auto-mode-alist '("\\.ys" . asm-mode))
 #+END_SRC
 * Machine-specific configuration
 Load local.el to enable machine-specific settings that don't get saved in git.
