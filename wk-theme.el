@@ -214,7 +214,20 @@
 									   :box ,wk/red))))
 
 	;; Helm
-	`(helm-selection ((t (:inherit (hl-line)))))))
+	`(helm-selection ((t (:inherit (hl-line)))))
+
+	;; Haskell
+    `(haskell-definition-face ((t (:foreground ,wk/green))))
+	`(haskell-keyword-face ((t (:foreground ,wk/red))))
+
+	;; ERC
+	`(erc-notice-face ((t (:foreground ,wk/blue))))
+	`(erc-input-face ((t (:foreground ,wk/orange))))
+	`(erc-nick-default-face ((t (:foreground ,wk/yellow))))
+	`(erc-timestamp-face ((t (:foreground ,wk/green))))
+	`(erc-prompt-face ((t (:foreground ,wk/green))))
+	))
+
 
 (provide-theme 'wk)
 

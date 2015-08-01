@@ -45,8 +45,6 @@ Load packages if they are not already installed.
      dired+
      font-utils
      fringe-helper
-     git-commit-mode
-     git-rebase-mode
      gnuplot
      gnuplot-mode
      haskell-mode
@@ -85,7 +83,7 @@ Load packages if they are not already installed.
       (dolist (package package-list)
         (unless (package-installed-p package)
           (progn
-            (if (packages-not-refreshed)
+            (if packages-not-refreshed
                 (progn
                   (setq packages-not-refreshed t)
                   (package-refresh-contents)))
@@ -161,7 +159,7 @@ Make hl-line work when visual-line-mode is enabled.
 #+END_SRC
 * Make =TAB= insert a literal tab in fundamental mode
 #+BEGIN_SRC emacs-lisp
-  (global-set-key (kbd "TAB") 'self-insert-command)
+  ;(global-set-key (kbd "TAB") 'self-insert-command)
 #+END_SRC
 * Display formatting
 ** Set the tab width to 4 spaces
@@ -245,6 +243,11 @@ Set RET to indent automatically, and fix weird wrapping of math.
 #+BEGIN_SRC emacs-lisp
   (setq LaTeX-fill-break-at-separators '(\\\[ \\\]))
   (setq TeX-newline-function 'newline-and-indent)
+#+END_SRC
+
+Treat lua environments as verbatim.
+#+BEGIN_SRC emacs-lisp
+  (setq-default LaTeX-verbatim-environments-local '("luacode" "luacode*"))
 #+END_SRC
 * Quick config file access
 Use =M-x edit-init-file= to edit this file.
@@ -392,9 +395,29 @@ Set up typopunct mode, which enable smart quotes and other unicode typographical
   (typopunct-change-language 'english t)
 #+END_SRC
 * Haskell mode
-Use structured-haskell-mode to indent haskell.
 #+BEGIN_SRC emacs-lisp
-  (add-hook 'haskell-mode-hook 'structured-haskell-mode)
+  (require 'haskell-interactive-mode)
+  (require 'haskell-process)
+  (add-hook 'haskell-mode-hook 'interactive-haskell-mode)
+
+  (custom-set-variables
+    '(haskell-process-suggest-remove-import-lines t)
+    '(haskell-process-auto-import-loaded-modules t)
+    '(haskell-process-log t))
+
+  (define-key haskell-mode-map (kbd "C-c C-l") 'haskell-process-load-or-reload)
+  (define-key haskell-mode-map (kbd "C-`") 'haskell-interactive-bring)
+  (define-key haskell-mode-map (kbd "C-c C-t") 'haskell-process-do-type)
+  (define-key haskell-mode-map (kbd "C-c C-i") 'haskell-process-do-info)
+  (define-key haskell-mode-map (kbd "C-c C-c") 'haskell-process-cabal-build)
+  (define-key haskell-mode-map (kbd "C-c C-k") 'haskell-interactive-mode-clear)
+  (define-key haskell-mode-map (kbd "C-c c") 'haskell-process-cabal)
+  (define-key haskell-mode-map (kbd "SPC") 'haskell-mode-contextual-space)
+
+  (define-key haskell-cabal-mode-map (kbd "C-`") 'haskell-interactive-bring)
+  (define-key haskell-cabal-mode-map (kbd "C-c C-k") 'haskell-interactive-mode-clear)
+  (define-key haskell-cabal-mode-map (kbd "C-c C-c") 'haskell-process-cabal-build)
+  (define-key haskell-cabal-mode-map (kbd "C-c c") 'haskell-process-cabal)
 #+END_SRC
 * HTML5 in nXML mode
 Validate HTML5 in nXML mode when the appropriate xmlns is provided.
@@ -433,7 +456,7 @@ Enable helm and set useful keybindings.
 * YASnippet
 Enable YASnippet everywhere.
 #+BEGIN_SRC emacs-lisp
-  (yas-global-mode 1)
+  ;(yas-global-mode 1)
 #+END_SRC
 * GDB
 Use the multi-window layout for GDB.
@@ -460,4 +483,10 @@ Use # to start comments.
 Load local.el to enable machine-specific settings that don't get saved in git.
 #+BEGIN_SRC emacs-lisp
   (load "~/.emacs.d/local" t)
+#+END_SRC
+* Windows
+Always split the screen vertically.
+#+BEGIN_SRC emacs-lisp
+  (setq split-height-threshold nil)
+  (setq split-width-threshold 0)
 #+END_SRC
